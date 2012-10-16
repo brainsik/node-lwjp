@@ -9,16 +9,16 @@ var net = require('net');
 var lwjp = require('./lwjp');
 
 
-function replyQuery(msg, data, c) {
-  var reply = {
-    '_lwjp-query-id': msg['_lwjp-query-id'],
-    '_lwjp-response-value': JSON.stringify(data)
-  };
-  c.write(lwjp.encode(reply));
-}
-
-
 var server = net.createServer(function(c) { //'connection' listener
+
+  function queryReply(msg, reply_data) {
+    var reply = {
+      '_lwjp-query-id': msg['_lwjp-query-id'],
+      '_lwjp-response-value': reply_data
+    };
+    c.write(lwjp.encode(reply));
+  }
+
   c.setEncoding(); // get utf8 string instead of a Buffer
 
   console.log('server connected');
@@ -28,13 +28,14 @@ var server = net.createServer(function(c) { //'connection' listener
 
   c.on('data', function(msg) {
     var body = lwjp.decode(msg);
-    if (body['_lwjp-query-id'] != null) {
-      console.log("received "+body['type']+" query "+body['_lwjp-query-id']);
+    assert(body['_lwjp-query-id'] != null); // only handle query messages
 
-      if (body['type'] === 'ping') {
+    console.log("received "+body['type']+" query "+body['_lwjp-query-id']);
+    if (body.type === "ping") {
         console.log("replying to query "+body['_lwjp-query-id']);
-        c.write(lwjp.encode_reply(msg, {reply: 'pong'}));
-      }
+        queryReply(msg, {resp: 'pong'});
+    } else {
+        assert(false); // unrecognize query type
     }
   });
 });
