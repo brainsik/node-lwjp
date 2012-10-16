@@ -1,4 +1,3 @@
-node-lwjp
-=========
+My first JavaScript project.
 
-Node.js implementation of the LWJP protocol
+Run. Now.
